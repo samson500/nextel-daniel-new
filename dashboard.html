@@ -3205,7 +3205,7 @@
 
                 /* Earning cap (applies to total balance) */
 
-                const EARNING_CAP = 41600;
+                const EARNING_CAP = 56000;
 
                 /* Make available globally for future pages */
 
@@ -3243,8 +3243,8 @@
 
                     updateBalance();
 
-                    if (allowed < requested && typeof showToast === "function") {
-                      showToast("Earning cap of ₦41,600 reached.");
+                    if (allowed < requested && typeof window.showDailyCapModal === "function") {
+                      window.showDailyCapModal();
                     }
 
                     return totalEarnings;
@@ -3353,8 +3353,8 @@
                     window.currentCaller = selectedName;
 
                     if (window.NextelCalls && !NextelCalls.canCall(selectedName)) {
-                      if (typeof showToast === "function") {
-                        showToast("Earning cap of ₦41,600 reached. Withdraw your earnings to continue.");
+                      if (typeof window.showDailyCapModal === "function") {
+                        window.showDailyCapModal();
                       }
 
                       return;
@@ -3959,6 +3959,15 @@
                 </div>
               </div>
             </div>
+            <div id="gvDailyCapModal">
+              <div class="gvActivateCard">
+                <h2>Daily Limit Reached</h2>
+                <p>You've completed the maximum tasks for today. Come back tomorrow.</p>
+                <div class="gvActivateActions">
+                  <button id="gvDailyCapOk" type="button">OK</button>
+                </div>
+              </div>
+            </div>
             <div id="gvEsimChoice">
               <div class="gvEsimChoiceCard">
                 <button id="gvEsimChoiceClose" type="button" aria-label="Close">
@@ -4163,6 +4172,28 @@
                 .gvActivateCard h2 {
                   font-size: 20px;
                 }
+              }
+              /* ========================================== DAILY CAP MODAL ========================================== */
+              #gvDailyCapModal {
+                position: fixed;
+                inset: 0;
+                background: rgba(6, 20, 15, 0.72);
+                backdrop-filter: blur(4px);
+                display: none;
+                align-items: center;
+                justify-content: center;
+                padding: 24px;
+                z-index: 999999;
+              }
+              #gvDailyCapModal.active {
+                display: flex;
+              }
+              #gvDailyCapOk {
+                background: #f2c94c;
+                color: #0f3327;
+              }
+              #gvDailyCapOk:hover {
+                transform: translateY(-2px);
               }
               /* ========================================== ESIM CHOICE MODAL ========================================== */
               #gvEsimChoice {
@@ -4494,6 +4525,23 @@
                 });
               })();
             </script>
+            <script>
+              (() => {
+                const capModal = document.getElementById("gvDailyCapModal");
+
+                const capOkBtn = document.getElementById("gvDailyCapOk");
+
+                if (!capModal || !capOkBtn) return;
+
+                window.showDailyCapModal = function () {
+                  capModal.classList.add("active");
+                };
+
+                capOkBtn.addEventListener("click", () => {
+                  capModal.classList.remove("active");
+                });
+              })();
+            </script>
             <style>
               /* ========================================== FULL SCREEN CALL PAGE ========================================== */
               #gvCallScreen {
@@ -4762,8 +4810,8 @@
                     window.currentCaller = shortName;
 
                     if (window.NextelCalls && !NextelCalls.canCall(shortName)) {
-                      if (typeof showToast === "function") {
-                        showToast("Earning cap of ₦41,600 reached. Withdraw your earnings to continue.");
+                      if (typeof window.showDailyCapModal === "function") {
+                        window.showDailyCapModal();
                       }
 
                       return;
@@ -5236,7 +5284,9 @@
                   }
 
                   if (window.NextelDashboard && NextelDashboard.dailyCapReached()) {
-                    showToast("Earning cap of ₦41,600 reached. Withdraw your earnings to continue.");
+                    if (typeof window.showDailyCapModal === "function") {
+                      window.showDailyCapModal();
+                    }
 
                     return;
                   }
