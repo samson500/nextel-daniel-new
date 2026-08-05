@@ -702,7 +702,7 @@
                             <div><label>PLAN</label><strong>Royal</strong></div>
                             <div><label>LINES</label><strong>3/50</strong></div>
                             <div><label>VALID</label><strong>12/26</strong></div>
-                            <div><label>STATUS</label><strong id="gvAccountStatus" class="is-active">Active</strong></div>
+                            <div><label>STATUS</label><strong id="gvAccountStatus" class="is-inactive">Not Active</strong></div>
                           </div>
                           <div class="gvFlipHint">Tap to Flip</div>
                         </div>
@@ -1055,10 +1055,11 @@
                     <div class="gvPlanStatusDivider"></div>
                     <div class="gvPlanStatusRow">
                       <span class="gvPlanStatusLabel">Account Status</span>
-                      <strong id="gvPlanStatusBadge" class="gvPlanStatusValue">Active</strong>
+                      <strong id="gvPlanStatusBadge" class="gvPlanStatusValue is-inactive">Not Active</strong>
                     </div>
                     <p class="gvPlanStatusText" id="gvPlanStatusHint">
-                      Your account is active. You can now make calls, earn, and withdraw your earnings.
+                      You need to purchase an E-SIM to activate your account before you can start making
+                      withdrawals.
                     </p>
                   </section>
                 </div>
@@ -3203,9 +3204,34 @@
                   localStorage.setItem("nextel_total_earnings", totalEarnings);
                 }
 
-                /* Earning cap (applies to total balance) */
+                /* Daily earning cap (resets every calendar day, separate from lifetime balance) */
 
                 const EARNING_CAP = 56000;
+
+                const DAILY_EARN_STORAGE = "nextel_daily_earnings_v1";
+
+                function todayKey() {
+                  return new Date().toISOString().slice(0, 10);
+                }
+
+                let dailyEarn = JSON.parse(localStorage.getItem(DAILY_EARN_STORAGE) || "null");
+
+                if (!dailyEarn || dailyEarn.date !== todayKey()) {
+                  dailyEarn = { date: todayKey(), amount: 0 };
+                }
+
+                function saveDailyEarn() {
+                  localStorage.setItem(DAILY_EARN_STORAGE, JSON.stringify(dailyEarn));
+                }
+
+                function refreshDailyEarn() {
+                  if (dailyEarn.date !== todayKey()) {
+                    dailyEarn = { date: todayKey(), amount: 0 };
+                    saveDailyEarn();
+                  }
+                }
+
+                saveDailyEarn();
 
                 /* Make available globally for future pages */
 
@@ -3221,7 +3247,9 @@
                   },
 
                   getDailyEarned() {
-                    return totalEarnings;
+                    refreshDailyEarn();
+
+                    return dailyEarn.amount;
                   },
 
                   getDailyCap() {
@@ -3229,17 +3257,25 @@
                   },
 
                   dailyCapReached() {
-                    return totalEarnings >= EARNING_CAP;
+                    refreshDailyEarn();
+
+                    return dailyEarn.amount >= EARNING_CAP;
                   },
 
                   addEarnings(amount) {
+                    refreshDailyEarn();
+
                     const requested = Number(amount) || 0;
 
-                    const room = Math.max(EARNING_CAP - totalEarnings, 0);
+                    const room = Math.max(EARNING_CAP - dailyEarn.amount, 0);
 
                     const allowed = Math.min(requested, room);
 
                     totalEarnings += allowed;
+
+                    dailyEarn.amount += allowed;
+
+                    saveDailyEarn();
 
                     updateBalance();
 
@@ -3853,19 +3889,20 @@
 
                 function renderAccountStatus(isActive) {
                   if (statusLabel) {
-                    statusLabel.textContent = "Active";
-                    statusLabel.classList.add("is-active");
-                    statusLabel.classList.remove("is-inactive");
+                    statusLabel.textContent = isActive ? "Active" : "Not Active";
+                    statusLabel.classList.toggle("is-active", isActive);
+                    statusLabel.classList.toggle("is-inactive", !isActive);
                   }
 
                   if (planStatusBadge) {
-                    planStatusBadge.textContent = "Active";
-                    planStatusBadge.classList.remove("is-inactive");
+                    planStatusBadge.textContent = isActive ? "Active" : "Not Active";
+                    planStatusBadge.classList.toggle("is-inactive", !isActive);
                   }
 
                   if (planStatusHint) {
-                    planStatusHint.textContent =
-                      "Your account is active. You can now make calls, earn, and withdraw your earnings.";
+                    planStatusHint.textContent = isActive
+                      ? "Your account is active. You can now make calls, earn, and withdraw your earnings."
+                      : "You need to purchase an E-SIM to activate your account before you can start making withdrawals.";
                   }
 
                   if (planStatusValue) {
@@ -7928,41 +7965,48 @@
 						LOAD USER
 						========================================== */
 
-                const user = JSON.parse(localStorage.getItem("nextel_connect_user") || "{}");
-                const personalData = JSON.parse(localStorage.getItem("nextel_profile_personal") || "{}");
+                function refreshProfileData() {
+                  const user = JSON.parse(localStorage.getItem("nextel_connect_user") || "{}");
+                  const personalData = JSON.parse(localStorage.getItem("nextel_profile_personal") || "{}");
 
-                const bankData = JSON.parse(localStorage.getItem("nextel_profile_bank") || "{}");
+                  const bankData = JSON.parse(localStorage.getItem("nextel_profile_bank") || "{}");
 
-                const balance = localStorage.getItem("nextel_total_earnings") || "17000";
+                  const balance = window.NextelDashboard
+                    ? NextelDashboard.getBalance()
+                    : Number(localStorage.getItem("nextel_total_earnings")) || 17000;
 
-                document.getElementById("gvProfileName").textContent =
-                  (user.firstName || "") + " " + (user.lastName || "");
+                  document.getElementById("gvProfileName").textContent =
+                    (user.firstName || "") + " " + (user.lastName || "");
 
-                document.getElementById("gvProfileUsername").textContent = "@" + (user.username || "user");
+                  document.getElementById("gvProfileUsername").textContent = "@" + (user.username || "user");
 
-                document.getElementById("gvPersonalName").value = (user.firstName || "") + " " + (user.lastName || "");
+                  document.getElementById("gvPersonalName").value =
+                    (user.firstName || "") + " " + (user.lastName || "");
 
-                phone.value = personalData.phone || user.phone || "";
+                  phone.value = personalData.phone || user.phone || "";
 
-                email.value = personalData.email || user.email || "";
+                  email.value = personalData.email || user.email || "";
 
-                document.getElementById("gvProfileToday").textContent = "₦" + Number(balance).toLocaleString();
+                  document.getElementById("gvProfileToday").textContent = "₦" + Number(balance).toLocaleString();
 
-                if (bankData.bank) {
-                  bank.value = bankData.bank;
+                  if (bankData.bank) {
+                    bank.value = bankData.bank;
+                  }
+
+                  if (bankData.account) {
+                    acct.value = bankData.account;
+                  }
+
+                  if (bankData.name) {
+                    acctName.value = bankData.name;
+                  }
+
+                  if (window.NextelCalls) {
+                    document.getElementById("gvProfileCalls").textContent = NextelCalls.getHistory().length;
+                  }
                 }
 
-                if (bankData.account) {
-                  acct.value = bankData.account;
-                }
-
-                if (bankData.name) {
-                  acctName.value = bankData.name;
-                }
-
-                if (window.NextelCalls) {
-                  document.getElementById("gvProfileCalls").textContent = NextelCalls.getHistory().length;
-                }
+                refreshProfileData();
 
                 /* ==========================================
 						PROFILE IMAGE
@@ -8093,6 +8137,8 @@
 						========================================== */
 
                 function openProfile() {
+                  refreshProfileData();
+
                   page.classList.add("active");
 
                   document.body.style.overflow = "hidden";
