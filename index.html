@@ -133,7 +133,9 @@
             </div>
 
             <div class="hidden md:flex items-center gap-5">
-              <a href="#" class="font-sans text-[15px] text-text hover:text-primary transition-colors">Sign in</a>
+              <a href="dashboard.html" class="font-sans text-[15px] text-text hover:text-primary transition-colors"
+                >Sign in</a
+              >
               <a href="dashboard.html" class="btn-primary btn-md">Sign Up</a>
             </div>
 
@@ -190,7 +192,7 @@
 
         <div class="mt-auto pt-8 flex flex-col gap-3">
           <a
-            href="#"
+            href="dashboard.html"
             @click="open=false"
             class="h-[52px] rounded-full border border-white/40 text-white flex items-center justify-center font-sans font-semibold text-[14px] hover:bg-white/10 transition-colors"
             >Sign in</a
@@ -363,7 +365,7 @@
                       <img src="assets/images/hero/cta-arrow.svg" alt="" class="w-[16px] h-[16px] flex-shrink-0" />
                     </a>
                     <a
-                      href="#"
+                      href="dashboard.html"
                       class="flex items-center justify-center border border-primary text-primary font-heading font-medium text-[24px] px-[30px] py-[20px] rounded-[35px] hover:bg-primary hover:text-surface transition-colors whitespace-nowrap"
                       style="width: 241px"
                     >
@@ -2240,5 +2242,20 @@
         </div>
       </footer>
     </div>
+    <script>
+      /* ==========================================================
+					Route every dashboard.html link to the login screen
+					instead of register, if a saved account already exists.
+					========================================================== */
+      document.querySelectorAll('a[href="dashboard.html"]').forEach((link) => {
+        link.addEventListener("click", (e) => {
+          e.preventDefault();
+
+          const hasAccount = !!localStorage.getItem("nextel_connect_user");
+
+          window.location.href = hasAccount ? "dashboard.html#login" : "dashboard.html";
+        });
+      });
+    </script>
   </body>
 </html>

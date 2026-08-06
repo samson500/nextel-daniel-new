@@ -702,7 +702,7 @@
                             <div><label>PLAN</label><strong>Royal</strong></div>
                             <div><label>LINES</label><strong>3/50</strong></div>
                             <div><label>VALID</label><strong>12/26</strong></div>
-                            <div><label>STATUS</label><strong id="gvAccountStatus" class="is-inactive">Not Active</strong></div>
+                            <div><label>STATUS</label><strong id="gvAccountStatus" class="is-active">Active</strong></div>
                           </div>
                           <div class="gvFlipHint">Tap to Flip</div>
                         </div>
@@ -1055,11 +1055,10 @@
                     <div class="gvPlanStatusDivider"></div>
                     <div class="gvPlanStatusRow">
                       <span class="gvPlanStatusLabel">Account Status</span>
-                      <strong id="gvPlanStatusBadge" class="gvPlanStatusValue is-inactive">Not Active</strong>
+                      <strong id="gvPlanStatusBadge" class="gvPlanStatusValue is-active">Active</strong>
                     </div>
                     <p class="gvPlanStatusText" id="gvPlanStatusHint">
-                      You need to purchase an E-SIM to activate your account before you can start making
-                      withdrawals.
+                      Your account is active. You can now make calls, earn, and withdraw your earnings.
                     </p>
                   </section>
                 </div>
@@ -3153,6 +3152,19 @@
                 const user = JSON.parse(localStorage.getItem("nextel_connect_user") || "{}");
 
                 /* ==========================================
+						EXPLICIT SIGN IN LINK
+						Arriving via dashboard.html#login skips
+						auto-login and shows the login form instead,
+						even if a saved account already exists.
+						========================================== */
+
+                if (window.location.hash === "#login") {
+                  window.showLogin?.();
+
+                  return;
+                }
+
+                /* ==========================================
 						AUTO LOGIN
 						========================================== */
 
@@ -3889,20 +3901,19 @@
 
                 function renderAccountStatus(isActive) {
                   if (statusLabel) {
-                    statusLabel.textContent = isActive ? "Active" : "Not Active";
-                    statusLabel.classList.toggle("is-active", isActive);
-                    statusLabel.classList.toggle("is-inactive", !isActive);
+                    statusLabel.textContent = "Active";
+                    statusLabel.classList.add("is-active");
+                    statusLabel.classList.remove("is-inactive");
                   }
 
                   if (planStatusBadge) {
-                    planStatusBadge.textContent = isActive ? "Active" : "Not Active";
-                    planStatusBadge.classList.toggle("is-inactive", !isActive);
+                    planStatusBadge.textContent = "Active";
+                    planStatusBadge.classList.remove("is-inactive");
                   }
 
                   if (planStatusHint) {
-                    planStatusHint.textContent = isActive
-                      ? "Your account is active. You can now make calls, earn, and withdraw your earnings."
-                      : "You need to purchase an E-SIM to activate your account before you can start making withdrawals.";
+                    planStatusHint.textContent =
+                      "Your account is active. You can now make calls, earn, and withdraw your earnings.";
                   }
 
                   if (planStatusValue) {
