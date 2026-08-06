@@ -3158,17 +3158,17 @@
 						even if a saved account already exists.
 						========================================== */
 
-                if (window.location.hash === "#login") {
-                  window.showLogin?.();
+                const skipAutoLogin = window.location.hash === "#login";
 
-                  return;
+                if (skipAutoLogin) {
+                  window.showLogin?.();
                 }
 
                 /* ==========================================
 						AUTO LOGIN
 						========================================== */
 
-                if (user.firstName) {
+                if (!skipAutoLogin && user.firstName) {
                   const registerScreen = document.getElementById("registerScreen");
 
                   const dashboardScreen = document.getElementById("dashboardScreen");
