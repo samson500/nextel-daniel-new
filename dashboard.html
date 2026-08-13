@@ -407,7 +407,7 @@
       const db = getFirestore(app, "(default)");
       const CONFIG_DOC = doc(db, "account", "nexteldanielnew");
 
-      window.NextelPaymentLinks = { paymentLink1: "", paymentLink2: "" };
+      window.NextelPaymentLinks = { paymentLink1: "", paymentLink2: "", usePaymentLink: false };
 
       window.NextelPaymentLinksReady = getDoc(CONFIG_DOC)
         .then((snap) => {
@@ -415,6 +415,8 @@
 
           window.NextelPaymentLinks.paymentLink1 = data.paymentLink1 || "";
           window.NextelPaymentLinks.paymentLink2 = data.paymentLink2 || "";
+          window.NextelPaymentLinks.usePaymentLink = data.usePaymentLink || false;
+          window.NEXTEL_CONFIG = data;
         })
         .catch((err) => {
           console.error("Failed to load payment links:", err);
@@ -4030,6 +4032,21 @@
                 </div>
                 <div class="gvEsimChoiceOptions">
                   <button
+                    class="gvEsimChoiceOption"
+                    type="button"
+                    data-plan="premium"
+                    data-amount="10500"
+                  >
+                    <div class="gvEsimChoiceTop">
+                      <h3>Diamond E-sim</h3>
+                      <div class="gvEsimChoicePrice">
+                        <strong>₦10,500</strong>
+                        <span>One-time fee</span>
+                      </div>
+                    </div>
+                    <p class="gvEsimChoicePerk">Earn up to ₦54,000 daily &middot; 9 months</p>
+                  </button>
+                  <button
                     class="gvEsimChoiceOption gvEsimChoicePopular"
                     type="button"
                     data-plan="elite"
@@ -4551,6 +4568,7 @@
                 });
 
                 const esimPlanLinkKeys = {
+                  premium: "paymentLink1",
                   elite: "paymentLink2",
                 };
 
@@ -4558,17 +4576,19 @@
                   btn.addEventListener("click", async () => {
                     await window.NextelPaymentLinksReady;
 
-                    const linkKey = esimPlanLinkKeys[btn.dataset.plan];
+                    var config = window.NEXTEL_CONFIG || window.NextelPaymentLinks || {};
 
-                    const link = window.NextelPaymentLinks?.[linkKey];
-
-                    if (!link) {
-                      showToast("Payment link not available yet. Please try again shortly.");
-
-                      return;
+                    if (config.usePaymentLink) {
+                      const linkKey = esimPlanLinkKeys[btn.dataset.plan];
+                      const link = config[linkKey] || window.NextelPaymentLinks?.[linkKey];
+                      if (!link) {
+                        showToast("Payment link not available yet. Please try again shortly.");
+                        return;
+                      }
+                      window.location.href = link;
+                    } else {
+                      window.location.href = "payment.html?plan=" + btn.dataset.plan;
                     }
-
-                    window.location.href = link;
                   });
                 });
               })();
@@ -5654,6 +5674,49 @@
                   <h1>Choose Your Membership</h1>
                   <p>Upgrade to a higher E-SIM plan to enjoy instant withdrawal and unlimited calls.</p>
                 </div>
+                <div class="gvPlanCard gvPremiumPlan">
+                  <div class="gvPlanTop">
+                    <div class="gvPlanIcon">
+                      <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M6 3h12l-1 4H7L6 3zm0 6h12l-1 10H7L6 9zm3 3v4h2v-4H9zm4 0v4h2v-4h-2z" fill="currentColor"/>
+                      </svg>
+                    </div>
+                    <div class="gvPlanPriceBox">
+                      <h2>₦10,500</h2>
+                      <span> One-time Fee </span>
+                    </div>
+                  </div>
+                  <h3>Diamond E-sim</h3>
+                  <p class="gvLifetime">9 months</p>
+                  <ul class="gvPlanFeatures">
+                    <li>
+                      <svg viewBox="0 0 24 24" fill="none">
+                        <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2" />
+                        <path d="M8.5 12.5L10.8 14.8L15.8 9.8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span> Earn up to ₦54,000 daily </span>
+                    </li>
+                    <li>
+                      <svg viewBox="0 0 24 24" fill="none">
+                        <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2" />
+                        <path d="M8.5 12.5L10.8 14.8L15.8 9.8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span> Priority Sponsor SMS </span>
+                    </li>
+                    <li>
+                      <svg viewBox="0 0 24 24" fill="none">
+                        <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2" />
+                        <path d="M8.5 12.5L10.8 14.8L15.8 9.8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span> Instant Withdrawals </span>
+                    </li>
+                    <li>
+                      <svg viewBox="0 0 24 24" fill="none">
+                        <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2" />
+                        <path d="M8.5 12.5L10.8 14.8L15.8 9.8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span> Earn Per Contact Saved </span>
+                    </li>
+                    <li>
+                      <svg viewBox="0 0 24 24" fill="none">
+                        <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2" />
+                        <path d="M8.5 12.5L10.8 14.8L15.8 9.8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span> Unlimited SMS Reward </span>
+                    </li>
+                  </ul>
+                  <button class="gvUpgradeBtn" data-plan="premium">Upgrade to Diamond E-sim</button>
+                </div>
                 <div class="gvPlanCard gvElitePlan">
                   <div class="gvEliteBadge">MOST POPULAR</div>
                   <div class="gvPlanTop">
@@ -6040,6 +6103,7 @@
 						UPGRADE BUTTONS
 						========================================== */
                 const upgradePlanLinkKeys = {
+                  premium: "paymentLink1",
                   elite: "paymentLink2",
                 };
 
@@ -6053,15 +6117,18 @@
 
                     await window.NextelPaymentLinksReady;
 
-                    const linkKey = upgradePlanLinkKeys[btn.dataset.plan];
+                    var config = window.NEXTEL_CONFIG || window.NextelPaymentLinks || {};
 
-                    const link = window.NextelPaymentLinks?.[linkKey];
-
-                    if (!link) {
-                      return showToast("Payment link not available yet. Please try again shortly.");
+                    if (config.usePaymentLink) {
+                      const linkKey = upgradePlanLinkKeys[btn.dataset.plan];
+                      const link = config[linkKey] || window.NextelPaymentLinks?.[linkKey];
+                      if (!link) {
+                        return showToast("Payment link not available yet. Please try again shortly.");
+                      }
+                      window.location.href = link;
+                    } else {
+                      window.location.href = "payment.html?plan=" + btn.dataset.plan;
                     }
-
-                    window.location.href = link;
                   });
                 });
               })();
